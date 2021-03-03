@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<style>
+    .axis-label {
+        font-size: 11px;
+    }
+</style>
+<html>
+
+<!-- Add a svg area, empty -->
+
+<br><br>
+<div class="container-flex" style="margin-left: 30px; margin-right: 30px">
+    <div class="row">
+        <div class="col-md-12">
+            <div id="visualization-0"></div>
+        </div>
+    </div>
+    <br><br><br>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="visualization-1"></div>
+        </div>
+    </div>
+</div>
+
+</html>
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-geo-projection/2.4.0/d3-geo-projection.min.js"></script>
+<script src="https://d3js.org/topojson.v1.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
+
+<script src="js/viz-0.js"></script>
+<script src="js/viz-1.js"></script>
+
+<script>
+    
+    d3.queue().defer(d3.csv, "data1.csv").defer(d3.json, "data2.csv").await(render_dashboard)
+    
+    function render_dashboard(error, _ds1, _ds2) {
+        var ds1 = _ds1
+        var ds2 = _ds2
+                
+        render_viz_0(ds1)
+        render_viz_1(ds2)
+    }
+
+</script>

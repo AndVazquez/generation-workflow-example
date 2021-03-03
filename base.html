@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<style>
+    .axis-label {
+        font-size: 11px;
+    }
+</style>
+<html>
+
+<!-- Add a svg area, empty -->
+
+<br><br>
+<div class="container-flex" style="margin-left: 30px; margin-right: 30px">
+    {% for vc in dash_config.visualizations %}
+    <div class="row">
+        <div class="col-md-12">
+            <div id="visualization-{{loop.index0}}"></div>
+        </div>
+    </div>
+    <br><br><br>
+    {% endfor %}
+    <br><br>
+</div>
+
+</html>
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-geo-projection/2.4.0/d3-geo-projection.min.js"></script>
+<script src="https://d3js.org/topojson.v1.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
+
+{% for vc in dash_config.visualizations %}
+<script src="static/js/viz-{{loop.index0}}.js"></script>
+{% endfor %}
+
+<script>    
+    d3.queue()
+    {%- for ds in dash_config.data_sources -%}
+        {%- if ds.data_source_type == 1 -%}  
+        .defer(d3.json, "{{ ds.data_source|safe }}")
+        {%- elif ds.data_source_type == 2 -%} 
+        .defer(d3.csv, "{{ ds.data_source|safe }}")
+        {%- elif ds.data_source_type == 3 or ds.data_source_type == 4 -%} 
+        .defer(d3.json, "{{ ds.data_source|safe }}")
+        {%- endif -%}
+    {%- endfor -%}
+    .await(render_dashboard)
+    
+    function render_dashboard(error
+    {%- for ds in dash_config.data_sources -%}
+        , _{{ ds.id }}
+    {%- endfor -%}
+    ) {
+        {% for ds in dash_config.data_sources %}
+            {% if ds.data_source_type == 3 %} 
+                var {{ ds.id }} = JSON.parse(_{{ ds.id }}[0]['data']);
+            {% else %}
+                var {{ ds.id }} = JSON.parse(_{{ ds.id }});
+            {% endif %}
+        {% endfor %}
+                
+        {% for vc in dash_config.visualizations %}
+                {%- set params = {'first_param': 'false'} -%}
+                {%- set function_sources = [] -%}
+                render_viz_{{ loop.index0 }}(
+                    {%- for mark in vc.marks -%}
+                        {%- if mark.data_source -%}
+                            {%- if params.first_param == 'true' -%}
+                                {% if mark.data_source is mapping %}
+                                    {%- if mark.data_source.source not in function_sources -%}
+                                        , {{ mark.data_source.source }}
+                                        {% do function_sources.append(mark.data_source.source) -%}
+                                    {%- endif -%}
+                                {% else %}
+                                    {%- if mark.data_source not in function_sources -%}
+                                        , {{ mark.data_source }}
+                                        {% do function_sources.append(mark.data_source) -%}
+                                    {%- endif -%}
+                                {% endif %}
+                            {%- else -%}
+                                {% if mark.data_source is mapping %}
+                                    {%- if mark.data_source.source not in function_sources -%}
+                                        {{ mark.data_source.source }}
+                                        {% do function_sources.append(mark.data_source.source) -%}
+                                    {%- endif -%}
+                                {% else %}
+                                    {%- if mark.data_source not in function_sources -%}
+                                        {{ mark.data_source }}
+                                        {% do function_sources.append(mark.data_source) -%}
+                                    {%- endif -%}
+                                {% endif %}
+                                {%- if params.update({'first_param': 'true'}) -%} {%- endif -%}
+                            {%- endif -%}
+                        {%- endif -%}
+                        
+                        
+                        {%- if mark.mark_type == 'composed' -%}
+                            {%- if mark.shape.data_source -%}
+                                {%- if params.first_param == 'true' -%}
+                                    {% if mark.shape.data_source is mapping %}
+                                        {%- if mark.shape.data_source.source not in function_sources -%}
+                                            , {{ mark.shape.data_source.source }}
+                                            {% do function_sources.append(mark.shape.data_source.source) -%}
+                                        {%- endif -%}
+                                    {% else %}
+                                        {%- if mark.shape.data_source not in function_sources -%}
+                                            , {{ mark.shape.data_source }}
+                                            {% do function_sources.append(mark.shape.data_source) -%}
+                                        {%- endif -%}
+                                    {% endif %}
+                                {%- else -%}
+                                    {% if mark.shape.data_source is mapping %}
+                                        {%- if mark.shape.data_source.source not in function_sources -%}
+                                            {{ mark.shape.data_source.source }}
+                                            {% do function_sources.append(mark.shape.data_source.source) -%}
+                                        {%- endif -%}
+                                    {% else %}
+                                        {%- if mark.shape.data_source not in function_sources -%}
+                                            {{ mark.shape.data_source }}
+                                            {% do function_sources.append(mark.shape.data_source) -%}
+                                        {%- endif -%}
+                                    {% endif %}
+                                    {%- if params.update({'first_param': 'true'}) -%} {%- endif -%}
+                                {%- endif -%}
+                            {%- endif -%}
+                        {%- endif -%}
+                    {%- endfor -%}
+            )
+        {% endfor %}
+    }
+</script>
